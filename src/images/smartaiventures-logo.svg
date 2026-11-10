@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 290" fill="none">
+  <defs>
+    <linearGradient id="savCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+    <linearGradient id="savNavy" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="savGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#0ea5e9" />
+    </linearGradient>
+    <filter id="savShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#020617" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Luxury & Modern AI Tech Emblem -->
+  <g transform="translate(65, 14)" filter="url(#savShadow)">
+    <!-- Outer Shield / Hexagon Frame -->
+    <path d="M 145 8 L 248 42 L 248 138 L 145 186 L 42 138 L 42 42 Z" 
+          fill="url(#savNavy)" 
+          stroke="url(#savCyan)" 
+          stroke-width="3.5" 
+          stroke-linejoin="round"/>
+    
+    <!-- Inner Circuit Inset -->
+    <path d="M 145 18 L 236 48 L 236 132 L 145 174 L 54 132 L 54 48 Z" 
+          fill="none" 
+          stroke="url(#savCyan)" 
+          stroke-width="1.2" 
+          stroke-dasharray="4 3" 
+          opacity="0.5"/>
+
+    <!-- Dynamic AI Neural Node / Monogram S & V Diamond -->
+    <path d="M 145 42 L 195 86 L 145 130 L 95 86 Z" 
+          fill="none" 
+          stroke="url(#savCyan)" 
+          stroke-width="3" />
+    
+    <path d="M 145 58 L 175 86 L 145 114 L 115 86 Z" 
+          fill="url(#savCyan)" 
+          opacity="0.2" />
+
+    <!-- Center AI Core Dot -->
+    <circle cx="145" cy="86" r="8" fill="url(#savCyan)"/>
+
+    <!-- Neural Circuit Lines -->
+    <line x1="145" y1="22" x2="145" y2="42" stroke="url(#savCyan)" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="145" y1="130" x2="145" y2="168" stroke="url(#savCyan)" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="72" y1="86" x2="95" y2="86" stroke="url(#savCyan)" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="195" y1="86" x2="218" y2="86" stroke="url(#savCyan)" stroke-width="2.5" stroke-linecap="round"/>
+
+    <circle cx="145" cy="22" r="3.5" fill="#38bdf8"/>
+    <circle cx="145" cy="168" r="3.5" fill="#38bdf8"/>
+    <circle cx="72" cy="86" r="3.5" fill="#38bdf8"/>
+    <circle cx="218" cy="86" r="3.5" fill="#38bdf8"/>
+
+    <!-- Elegant Orbit / Swoosh Ring -->
+    <path d="M 22 108 C 50 162, 238 174, 268 96 C 242 118, 112 128, 35 105 Z" 
+          fill="url(#savCyan)" 
+          opacity="0.9"/>
+  </g>
+
+  <!-- Brand Typography: SMART AI VENTURES -->
+  <text x="210" y="232" 
+        text-anchor="middle" 
+        font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" 
+        font-size="22" 
+        font-weight="900" 
+        fill="#0f172a" 
+        letter-spacing="2.5">
+    SMART AI VENTURES
+  </text>
+
+  <!-- Subtitle: — LLC — -->
+  <g transform="translate(210, 264)">
+    <line x1="-70" y1="-5" x2="-25" y2="-5" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="0" y="0" 
+          text-anchor="middle" 
+          font-family="'Plus Jakarta Sans', system-ui, sans-serif" 
+          font-size="15" 
+          font-weight="800" 
+          fill="#0284c7" 
+          letter-spacing="5">
+      LLC
+    </text>
+    <line x1="25" y1="-5" x2="70" y2="-5" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>
