@@ -9,12 +9,12 @@ import {
 import { categories, products } from './data/products';
 import { siteConfig } from './data/siteConfig';
 import logoImg from './images/eve-earth-logo.svg';
-import heroEarthBg from './images/hero-earth-ring.jpg';
-import eveShowcaseGroup from './images/eve-showcase-group.jpg';
-import eveShowcaseJar from './images/eve-showcase-jar.jpg';
-import eveHandCapsules from './images/eve-hand-capsules.jpg';
-import eveTrioJars from './images/eve-trio-jars.jpg';
-import eveContactPortrait from './images/eve-contact-portrait.jpg';
+import heroEarthBg from './images/hero-earth-ring.webp';
+import eveShowcaseGroup from './images/eve-showcase-group.webp';
+import eveShowcaseJar from './images/eve-showcase-jar.webp';
+import eveHandCapsules from './images/eve-hand-capsules.webp';
+import eveTrioJars from './images/eve-trio-jars.webp';
+import eveContactPortrait from './images/eve-contact-portrait.webp';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -45,6 +45,64 @@ export default function App() {
   const [activePillar, setActivePillar] = useState(0);
   const [activeQuote, setActiveQuote] = useState(0);
   const [mobileWholesaleOpen, setMobileWholesaleOpen] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Adaptive frosted navbar, subtle scroll depth & reading progress bar
+  useEffect(() => {
+    let rafId = null;
+    const updateScrollVars = () => {
+      rafId = null;
+      const y = window.scrollY || 0;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? Math.min(1, Math.max(0, y / docHeight)) : 0;
+      document.documentElement.style.setProperty('--eve-scroll', String(Math.min(y, 900)));
+      document.documentElement.style.setProperty('--eve-scroll-progress', progress.toFixed(4));
+      setIsScrolled(y > 56);
+    };
+    const onScroll = () => {
+      if (rafId === null) rafId = window.requestAnimationFrame(updateScrollVars);
+    };
+    updateScrollVars();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
+    };
+  }, []);
+
+  // Scroll-reveal IntersectionObserver with instant viewport & fallback visibility
+  useEffect(() => {
+    const elements = Array.from(document.querySelectorAll('[data-reveal]'));
+    if (!elements.length) return undefined;
+
+    if (typeof window.IntersectionObserver === 'undefined') {
+      elements.forEach((el) => el.classList.add('is-revealed'));
+      return undefined;
+    }
+
+    const observer = new window.IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -36px 0px' }
+    );
+
+    elements.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.96) {
+        el.classList.add('is-revealed');
+      } else {
+        observer.observe(el);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [activeTab]);
 
   useEffect(() => {
     const isOverlayOpen = mobileMenuOpen || cartOpen || Boolean(modalType);
@@ -286,9 +344,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen eve-app-shell">
+    <div className="min-h-screen eve-app-shell eve-motion-ready">
+      <div className="eve-scroll-progress" aria-hidden="true"></div>
       {/* CLEAN ARCHITECTURAL HEADER MATCHING HERO CANVAS */}
-      <header className={`site-header eve-minimal-header ${activeTab === 'home' ? 'eve-header-over-hero' : ''}`}>
+      <header className={`site-header eve-minimal-header ${activeTab === 'home' ? 'eve-header-over-hero' : ''} ${isScrolled ? 'is-scrolled' : ''}`}>
         <div className="main-nav">
           <div className="nav-brand" onClick={() => navigateTo('home')} style={{ cursor: 'pointer' }}>
             <img src={siteConfig.logo || logoImg} alt={`${siteConfig.companyName} Logo`} className="brand-logo-img" />
@@ -561,10 +620,15 @@ export default function App() {
       {activeTab === 'home' && (
         <main>
           {/* FIRST SECTION: ARCHITECTURAL BOTANICAL HERO MATCHING REFERENCE UI */}
-          <section
-            className="hero-section eve-hero-canvas"
-            style={{ backgroundImage: `url(${heroEarthBg})` }}
-          >
+          <section className="hero-section eve-hero-canvas">
+            <img
+              src={heroEarthBg}
+              alt=""
+              aria-hidden="true"
+              className="eve-hero-bg-img"
+              fetchPriority="high"
+              decoding="async"
+            />
             <div className="eve-hero-scrim" aria-hidden="true"></div>
             <div className="eve-hero-inner">
               {/* Top Row: Bold 3-Line Display Headline (Left) + Editorial Note (Right) */}
@@ -635,12 +699,13 @@ export default function App() {
           <section className="eve-botanical-bento-section">
             <div className="eve-bento-container">
               {/* Top Full-Width Product Group Banner */}
-              <div className="eve-bento-top-card">
+              <div className="eve-bento-top-card" data-reveal="up">
                 <img
                   src={eveShowcaseGroup}
                   alt="EVE EARTH Botanical Formulation Lineup"
                   className="eve-bento-top-img"
                   loading="lazy"
+                  decoding="async"
                 />
                 <button
                   type="button"
@@ -655,7 +720,7 @@ export default function App() {
               </div>
 
               {/* Middle Centered Editorial Statement Strip */}
-              <div className="eve-bento-mid-banner">
+              <div className="eve-bento-mid-banner" data-reveal="up" style={{ '--reveal-delay': '60ms' }}>
                 <h2 className="eve-bento-mid-title">Healthy Living, Naturally Curated</h2>
                 <p className="eve-bento-mid-sub">Explore Our Innovations</p>
               </div>
@@ -663,13 +728,14 @@ export default function App() {
               {/* Bottom 2-Column Split Grid: Bestseller Jar Card + Hand Capsules Photo */}
               <div className="eve-bento-bottom-grid">
                 {/* Left Card: Bestseller Jar */}
-                <div className="eve-bento-jar-card">
+                <div className="eve-bento-jar-card" data-reveal="up" style={{ '--reveal-delay': '80ms' }}>
                   <span className="eve-bento-bestseller-pill">Bestseller</span>
                   <img
                     src={eveShowcaseJar}
                     alt="EVE-01 Botanical Daily Reserve"
                     className="eve-bento-jar-img"
                     loading="lazy"
+                    decoding="async"
                   />
                   <div className="eve-bento-jar-scrim" aria-hidden="true"></div>
                   <div className="eve-bento-jar-content">
@@ -704,12 +770,13 @@ export default function App() {
                 </div>
 
                 {/* Right Card: Hand Holding Botanical Capsules */}
-                <div className="eve-bento-hand-card">
+                <div className="eve-bento-hand-card" data-reveal="up" style={{ '--reveal-delay': '160ms' }}>
                   <img
                     src={eveHandCapsules}
                     alt="Botanical capsules held in open hand"
                     className="eve-bento-hand-img"
                     loading="lazy"
+                    decoding="async"
                   />
                 </div>
               </div>
@@ -718,7 +785,7 @@ export default function App() {
 
           {/* THIRD SECTION: NEW FROM EVE EARTH (3-JAR EDITORIAL SHOWCASE) */}
           <section className="eve-new-from-section">
-            <div className="eve-new-from-card">
+            <div className="eve-new-from-card" data-reveal="up">
               <div className="eve-new-from-left">
                 <h2>New From EVE EARTH</h2>
               </div>
@@ -728,6 +795,7 @@ export default function App() {
                   alt="New From EVE EARTH Botanical Trio"
                   className="eve-new-from-img"
                   loading="lazy"
+                  decoding="async"
                 />
               </div>
               <div className="eve-new-from-right">
@@ -738,11 +806,26 @@ export default function App() {
             </div>
           </section>
 
+          {/* LIVING BOTANICAL MARQUEE RIBBON */}
+          <div className="ticker-strip" aria-label="EVE EARTH Formulation Standards">
+            <div className="ticker-track">
+              {[0, 1].map((dup) => (
+                <div key={dup} className="ticker-group" aria-hidden={dup === 1}>
+                  <span className="ticker-item"><Sparkles size={13} /> Cold-Extracted Botanicals</span>
+                  <span className="ticker-item"><ShieldCheck size={13} /> 99.4% Verified Purity</span>
+                  <span className="ticker-item"><Award size={13} /> UV-Shielded Forest Glass</span>
+                  <span className="ticker-item"><Truck size={13} /> 24–48h Global Dispatch</span>
+                  <span className="ticker-item"><Globe size={13} /> Direct Origin Provenance</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* FOURTH SECTION: DARK FOREST BOTANICAL PRODUCT LINEUP */}
           <section id="featured-products-section" className="eve-dark-products-section">
             <div className="eve-dark-products-inner">
               {/* Top Header Row: Left Headline + Right Copy & Shop All Link */}
-              <div className="eve-dark-products-header">
+              <div className="eve-dark-products-header" data-reveal="up">
                 <h2 className="eve-dark-products-heading">
                   Whole body health starts<br />
                   with EVE EARTH.
@@ -767,9 +850,11 @@ export default function App() {
 
               {/* 4-Card Staggered Botanical Product Grid */}
               <div className="eve-dark-products-grid">
-                {products.map((prod) => (
+                {products.map((prod, idx) => (
                   <div
                     key={prod.id}
+                    data-reveal="up"
+                    style={{ '--reveal-delay': `${idx * 85}ms` }}
                     className={`eve-dark-prod-card ${prod.isFeaturedHighlight ? 'is-elevated' : ''}`}
                     onClick={() => viewProductDetail(prod)}
                   >
@@ -788,6 +873,7 @@ export default function App() {
                         alt={prod.name}
                         className="eve-dark-prod-img"
                         loading="lazy"
+                        decoding="async"
                       />
                     </div>
 
@@ -818,7 +904,7 @@ export default function App() {
             <div className="eve-science-container">
               {/* Interactive Formulation Pillars Grid */}
               <div className="eve-science-grid">
-                <div className="eve-science-left">
+                <div className="eve-science-left" data-reveal="up">
                   <span className="eve-science-kicker">PRECISION BOTANICALS</span>
                   <h2 className="eve-science-heading">
                     Formulated to survive,<br />
@@ -851,12 +937,15 @@ export default function App() {
                 </div>
 
                 {/* Right Dynamic Visual Spotlight */}
-                <div className="eve-science-right">
+                <div className="eve-science-right" data-reveal="up" style={{ '--reveal-delay': '120ms' }}>
                   <div className="eve-science-visual-card">
                     <img
+                      key={formulationPillars[activePillar].num}
                       src={formulationPillars[activePillar].image}
                       alt={formulationPillars[activePillar].title}
-                      className="eve-science-visual-img"
+                      className="eve-science-visual-img eve-swap-fade"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="eve-science-visual-scrim" aria-hidden="true"></div>
                     <div className="eve-science-live-pill">
@@ -865,7 +954,7 @@ export default function App() {
                     </div>
 
                     <div className="eve-science-bottom-bar">
-                      <div className="eve-science-metric">
+                      <div key={`metric-${activePillar}`} className="eve-science-metric eve-swap-fade">
                         <strong>{formulationPillars[activePillar].metricValue}</strong>
                         <span>{formulationPillars[activePillar].metricLabel}</span>
                       </div>
@@ -887,7 +976,7 @@ export default function App() {
 
               {/* Interactive Partner Spotlight & Direct Trade Desk */}
               <div className="eve-proof-split">
-                <div className="eve-quote-spotlight">
+                <div className="eve-quote-spotlight" data-reveal="up">
                   <div className="eve-quote-top-bar">
                     <span className="eve-quote-kicker">VERIFIED PARTNERS</span>
                     <div className="eve-quote-switcher">
@@ -905,7 +994,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  <blockquote className="eve-quote-text">
+                  <blockquote key={`q-${activeQuote}`} className="eve-quote-text eve-swap-fade">
                     “{partnerQuotes[activeQuote].quote}”
                   </blockquote>
 
@@ -922,7 +1011,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="eve-trade-desk-card">
+                <div className="eve-trade-desk-card" data-reveal="up" style={{ '--reveal-delay': '100ms' }}>
                   <span className="eve-trade-kicker">WHOLESALE &amp; CUSTOM ORDERS</span>
                   <h3>Ready to stock EVE EARTH in your stores?</h3>
                   <p>
@@ -954,7 +1043,7 @@ export default function App() {
 
           {/* SECTION: CONTACT EVE EARTH (SPLIT BOTANICAL EDITORIAL) */}
           <section id="contact-section" className="eve-contact-split-section">
-            <div className="eve-contact-split-grid">
+            <div className="eve-contact-split-grid" data-reveal="up">
               {/* LEFT PANEL: LUMINOUS SAGE ATMOSPHERIC CONTACT DESK */}
               <div className="eve-contact-split-left">
                 <div className="eve-contact-glass-nav">
@@ -2006,7 +2095,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div style={{ background: '#fff', padding: '36px', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
+              <div className="eve-subpage-card" style={{ background: '#fff', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
                 <h3 style={{ fontSize: '1.25rem', marginBottom: '18px' }}>Send Us a Message</h3>
                 <form onSubmit={handleFormSubmit} className="modal-form">
                   <div className="form-group">

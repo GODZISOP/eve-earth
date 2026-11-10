@@ -1,7 +1,7 @@
-import jarDailyReserve from '../images/eve-jar-daily-reserve.png';
-import jarDailyGreens from '../images/eve-jar-daily-greens.png';
-import jarOmega3 from '../images/eve-jar-omega3.png';
-import jarProbiotic from '../images/eve-jar-probiotic.png';
+import jarDailyReserve from '../images/eve-jar-daily-reserve.webp';
+import jarDailyGreens from '../images/eve-jar-daily-greens.webp';
+import jarOmega3 from '../images/eve-jar-omega3.webp';
+import jarProbiotic from '../images/eve-jar-probiotic.webp';
 
 export const categories = [
   {
