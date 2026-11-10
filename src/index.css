@@ -5135,7 +5135,11 @@ img {
     grid-template-columns: 1fr;
   }
   .eve-white-card-media {
-    min-height: 140px;
+    min-height: 130px;
+  }
+  .eve-white-card-media img {
+    max-height: 185px;
+    margin: 0 auto;
   }
   .eve-hero-stat-block {
     background: rgba(15, 29, 19, 0.65);
@@ -7137,7 +7141,11 @@ body {
     grid-template-columns: 1fr;
   }
   .eve-white-card-media {
-    min-height: 140px;
+    min-height: 130px;
+  }
+  .eve-white-card-media img {
+    max-height: 185px;
+    margin: 0 auto;
   }
   .featured-grid-four {
     grid-template-columns: 1fr;
