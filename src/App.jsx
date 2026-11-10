@@ -44,6 +44,28 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState(null);
   const [activePillar, setActivePillar] = useState(0);
   const [activeQuote, setActiveQuote] = useState(0);
+  const [mobileWholesaleOpen, setMobileWholesaleOpen] = useState(true);
+
+  useEffect(() => {
+    const isOverlayOpen = mobileMenuOpen || cartOpen || Boolean(modalType);
+    if (isOverlayOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false);
+        setCartOpen(false);
+        closeModal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mobileMenuOpen, cartOpen, modalType]);
 
   const formulationPillars = [
     {
@@ -369,8 +391,11 @@ export default function App() {
               className={`mobile-toggle-btn ${mobileMenuOpen ? 'active' : ''}`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle Navigation Menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-nav-drawer"
             >
-              {mobileMenuOpen ? <X size={22} /> : <MenuIcon size={22} />}
+              {mobileMenuOpen ? <X size={19} /> : <MenuIcon size={19} />}
+              <span className="mobile-toggle-label">{mobileMenuOpen ? 'CLOSE' : 'MENU'}</span>
             </button>
           </div>
         </div>
@@ -379,13 +404,20 @@ export default function App() {
       {/* MOBILE MENU ACCORDION / DRAWER */}
       {mobileMenuOpen && (
         <div className="mobile-drawer-backdrop" onClick={() => setMobileMenuOpen(false)}>
-          <div className="mobile-nav-drawer" onClick={(e) => e.stopPropagation()}>
+          <div
+            id="mobile-nav-drawer"
+            className="mobile-nav-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile Navigation"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mobile-drawer-header">
-              <div className="mobile-drawer-brand">
+              <div className="mobile-drawer-brand" onClick={() => navigateTo('home')} style={{ cursor: 'pointer' }}>
                 <img src={siteConfig.logo || logoImg} alt="Logo" className="mobile-drawer-logo" />
                 <div>
                   <div className="mobile-drawer-title">{siteConfig.companyName}</div>
-                  <div className="mobile-drawer-subtitle">{siteConfig.tagline}</div>
+                  <div className="mobile-drawer-subtitle">Botanical Reserve</div>
                 </div>
               </div>
               <button 
@@ -414,55 +446,101 @@ export default function App() {
             </div>
 
             <div className="mobile-drawer-section">
-              <div className="mobile-section-label">Navigation</div>
-              {[
-                { key: 'home', label: 'Home' },
-                { key: 'about', label: 'About Us' },
-                { key: 'business', label: 'Our Services' },
-                { key: 'partnerships', label: 'Wholesale Partnerships' },
-                { key: 'supplier', label: 'Supplier Inquiries' },
-                { key: 'contact', label: 'Contact Us' }
-              ].map(item => (
+              <div className="mobile-section-label">Menu</div>
+              <button
+                onClick={() => navigateTo('home')}
+                className={`mobile-nav-link ${activeTab === 'home' ? 'active' : ''}`}
+              >
+                <span>Home</span>
+              </button>
+              <button
+                onClick={() => { setSelectedCategory('all'); navigateTo('shop'); }}
+                className={`mobile-nav-link ${activeTab === 'shop' ? 'active' : ''}`}
+              >
+                <LayoutGrid size={16} />
+                <span>Collection ({products.length})</span>
+              </button>
+              <button
+                onClick={() => navigateTo('about')}
+                className={`mobile-nav-link ${activeTab === 'about' ? 'active' : ''}`}
+              >
+                <span>About {siteConfig.companyName}</span>
+              </button>
+
+              <div className="mobile-accordion-group">
                 <button
-                  key={item.key}
-                  onClick={() => navigateTo(item.key)}
-                  className={`mobile-nav-link ${activeTab === item.key ? 'active' : ''}`}
+                  type="button"
+                  onClick={() => setMobileWholesaleOpen(v => !v)}
+                  className={`mobile-nav-link mobile-accordion-trigger ${(activeTab === 'partnerships' || activeTab === 'business' || activeTab === 'supplier') ? 'active' : ''}`}
+                  aria-expanded={mobileWholesaleOpen}
                 >
-                  {item.label}
+                  <span>Wholesale &amp; Trade</span>
+                  <ChevronDown
+                    size={16}
+                    style={{
+                      marginLeft: 'auto',
+                      transform: mobileWholesaleOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s ease'
+                    }}
+                  />
                 </button>
-              ))}
+                {mobileWholesaleOpen && (
+                  <div className="mobile-accordion-items">
+                    <button
+                      onClick={() => navigateTo('partnerships')}
+                      className={`mobile-sub-link ${activeTab === 'partnerships' ? 'active' : ''}`}
+                    >
+                      Wholesale Partnerships
+                    </button>
+                    <button
+                      onClick={() => navigateTo('business')}
+                      className={`mobile-sub-link ${activeTab === 'business' ? 'active' : ''}`}
+                    >
+                      Commercial Services
+                    </button>
+                    <button
+                      onClick={() => navigateTo('supplier')}
+                      className={`mobile-sub-link ${activeTab === 'supplier' ? 'active' : ''}`}
+                    >
+                      Supplier Inquiries
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => navigateTo('contact')}
+                className={`mobile-nav-link ${activeTab === 'contact' ? 'active' : ''}`}
+              >
+                <span>Contact Us</span>
+              </button>
             </div>
 
             <div className="mobile-drawer-section">
-              <div className="mobile-section-label">Product Categories</div>
-              <button
-                onClick={() => handleCategoryClick('all')}
-                className={`mobile-nav-link ${selectedCategory === 'all' && activeTab === 'home' ? 'active' : ''}`}
-              >
-                <LayoutGrid size={16} />
-                <span>All Products ({products.length})</span>
-              </button>
-              {categories.map(cat => (
+              <div className="mobile-section-label">Botanical Formulas</div>
+              {products.map(prod => (
                 <button
-                  key={cat.id}
-                  onClick={() => handleCategoryClick(cat.id)}
-                  className={`mobile-nav-link ${selectedCategory === cat.id && activeTab === 'home' ? 'active' : ''}`}
+                  key={prod.id}
+                  onClick={() => viewProductDetail(prod)}
+                  className={`mobile-nav-link mobile-product-shortcut ${activeTab === 'product-detail' && activeProduct?.id === prod.id ? 'active' : ''}`}
                 >
-                  <span>{cat.name}</span>
+                  <span className="mobile-sku-tag">{prod.sku}</span>
+                  <span>{prod.name}</span>
+                  <ArrowRight size={14} style={{ marginLeft: 'auto', opacity: 0.6 }} />
                 </button>
               ))}
             </div>
 
             <div className="mobile-drawer-footer">
               <button 
-                className="btn-hero-primary"
-                style={{ width: '100%', justifyContent: 'center' }}
+                className="mobile-cta-primary"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   handleOpenPartner('partner');
                 }}
               >
-                Partner Today
+                <span>Get Started — Partner Inquiry</span>
+                <ArrowRight size={16} />
               </button>
               <div className="mobile-drawer-contact">
                 <a href={`tel:${siteConfig.phonePrimaryTel}`} className="mobile-contact-link">
@@ -1062,7 +1140,7 @@ export default function App() {
 
             {/* Search & Sort Row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
-              <div style={{ position: 'relative', flex: '1', minWidth: '260px', maxWidth: '420px' }}>
+              <div style={{ position: 'relative', flex: '1', minWidth: 'min(100%, 240px)', maxWidth: '420px' }}>
                 <Search size={18} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="text"
@@ -1568,8 +1646,8 @@ export default function App() {
 
       {/* VIEW: ABOUT US */}
       {activeTab === 'about' && (
-        <div className="section-wrapper" style={{ padding: '60px 24px' }}>
-          <div style={{ maxWidth: '850px', margin: '0 auto', background: '#fff', padding: '48px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+        <div className="section-wrapper eve-subpage-wrapper">
+          <div className="eve-subpage-card" style={{ maxWidth: '850px', margin: '0 auto', background: '#fff', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
             <span className="section-tag">COMPANY OVERVIEW</span>
             <h1 className="section-title" style={{ marginBottom: '20px' }}>About {siteConfig.companyName}</h1>
             <p style={{ fontSize: '1.05rem', color: '#475569', lineHeight: 1.8, marginBottom: '20px' }}>
@@ -1691,8 +1769,8 @@ export default function App() {
 
       {/* VIEW: WHOLESALE PARTNERSHIPS */}
       {activeTab === 'partnerships' && (
-        <div className="section-wrapper" style={{ padding: '60px 24px' }}>
-          <div style={{ maxWidth: '800px', margin: '0 auto', background: '#fff', padding: '40px', borderRadius: '24px', border: '1px solid #e2e8f0' }}>
+        <div className="section-wrapper eve-subpage-wrapper">
+          <div className="eve-subpage-card" style={{ maxWidth: '800px', margin: '0 auto', background: '#fff', borderRadius: '24px', border: '1px solid #e2e8f0' }}>
             <span className="section-tag">EXPAND WITH US</span>
             <h1 className="section-title" style={{ marginBottom: '16px' }}>Wholesale Partnerships</h1>
             <p style={{ color: '#475569', fontSize: '1rem', lineHeight: 1.7, marginBottom: '24px' }}>
@@ -1700,7 +1778,7 @@ export default function App() {
             </p>
 
             <form onSubmit={handleFormSubmit} className="modal-form">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="form-grid-2">
                 <div className="form-group">
                   <label className="form-label">Contact Name *</label>
                   <input type="text" required placeholder="Your full name" className="form-input" />
@@ -1710,7 +1788,7 @@ export default function App() {
                   <input type="text" required placeholder="Business entity name" className="form-input" />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="form-grid-2">
                 <div className="form-group">
                   <label className="form-label">Email Address *</label>
                   <input type="email" required placeholder="business@example.com" className="form-input" />
@@ -1762,7 +1840,7 @@ export default function App() {
 
       {/* VIEW: SUPPLIER INQUIRIES (WITH EXACT TEXT PROVIDED BY USER) */}
       {activeTab === 'supplier' && (
-        <div className="section-wrapper" style={{ padding: '60px 24px' }}>
+        <div className="section-wrapper eve-subpage-wrapper">
           <div style={{ maxWidth: '850px', margin: '0 auto' }}>
             <div className="section-header-center">
               <span className="section-tag">SUPPLIER INQUIRIES</span>
@@ -1773,18 +1851,7 @@ export default function App() {
             </div>
 
             {/* Quick Contact Info Strip with exact address and phone */}
-            <div style={{
-              background: 'var(--primary-navy)',
-              color: '#ffffff',
-              padding: '24px 30px',
-              borderRadius: '16px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '16px',
-              marginBottom: '32px'
-            }}>
+            <div className="eve-supplier-strip">
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <Mail size={20} color="var(--accent-gold)" />
                 <a href={`mailto:${siteConfig.email}`} style={{ color: '#fff', textDecoration: 'none', fontWeight: '600' }}>
@@ -1803,7 +1870,7 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ background: '#fff', padding: '40px', borderRadius: '24px', border: '1px solid #e6dfd4' }}>
+            <div className="eve-subpage-card" style={{ background: '#fff', borderRadius: '24px', border: '1px solid #e6dfd4' }}>
               <div style={{ marginBottom: '24px', borderLeft: '4px solid var(--accent-teal)', paddingLeft: '16px' }}>
                 <h3 style={{ fontSize: '1.25rem', color: 'var(--primary-navy)', marginBottom: '8px' }}>Supplier Inquiries</h3>
                 <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: '1.6' }}>
@@ -1812,7 +1879,7 @@ export default function App() {
               </div>
 
               <form onSubmit={handleFormSubmit} className="modal-form">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Company / Factory Name *</label>
                     <input type="text" required placeholder="Manufacturing or trading entity" className="form-input" />
@@ -1822,7 +1889,7 @@ export default function App() {
                     <input type="text" required placeholder="Your name" className="form-input" />
                   </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Direct Email *</label>
                     <input type="email" required placeholder="rep@brand.com" className="form-input" />
@@ -1861,7 +1928,7 @@ export default function App() {
 
       {/* VIEW: CONTACT US */}
       {activeTab === 'contact' && (
-        <div className="section-wrapper" style={{ padding: '60px 24px' }}>
+        <div className="section-wrapper eve-subpage-wrapper">
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
             <div className="section-header-center">
               <span className="section-tag">GET IN TOUCH</span>
@@ -1871,8 +1938,8 @@ export default function App() {
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '32px', marginTop: '40px' }}>
-              <div style={{ background: 'var(--primary-navy)', color: '#fff', padding: '36px', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+            <div className="contact-subpage-grid">
+              <div className="eve-subpage-card" style={{ background: 'var(--primary-navy)', color: '#fff', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                 <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', marginBottom: '16px', color: '#f8fafc' }}>Direct Coordinates</h3>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontSize: '0.95rem' }}>
