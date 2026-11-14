@@ -7,7 +7,8 @@ import {
   LayoutGrid, Sparkles, ChevronDown, Package, Star, Globe, ArrowUpRight
 } from 'lucide-react';
 import { categories, products } from './data/products';
-import { siteConfig } from './data/siteConfig';
+import { siteConfig as defaultSiteConfig } from './data/siteConfig';
+import { AdminPanel, useActiveSiteConfig } from './admin';
 import logoImg from './images/eve-earth-logo.svg';
 import heroEarthBg from './images/hero-earth-ring.webp';
 import eveShowcaseGroup from './images/eve-showcase-group.webp';
@@ -16,7 +17,65 @@ import eveHandCapsules from './images/eve-hand-capsules.webp';
 import eveTrioJars from './images/eve-trio-jars.webp';
 import eveContactPortrait from './images/eve-contact-portrait.webp';
 
+function isAdminHostname() {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname.toLowerCase();
+  return (
+    host.startsWith('admin.') ||
+    host.includes('-admin.') ||
+    host.includes('admin-') ||
+    import.meta.env.VITE_ADMIN_ONLY === 'true'
+  );
+}
+
+function checkIsAdminRoute() {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  const cleanPath = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+  const cleanHash = window.location.hash.toLowerCase();
+  if (
+    cleanPath.endsWith('/admin') ||
+    cleanHash.startsWith('#admin') ||
+    cleanHash.startsWith('#/admin') ||
+    params.has('admin')
+  ) {
+    return true;
+  }
+  if (isAdminHostname() && !params.has('preview')) {
+    return true;
+  }
+  return false;
+}
+
 export default function App() {
+  const { config: dynamicConfig, refresh: refreshActiveSite } = useActiveSiteConfig();
+  const siteConfig = dynamicConfig || defaultSiteConfig;
+  const [isAdminMode, setIsAdminMode] = useState(checkIsAdminRoute);
+
+  useEffect(() => {
+    const syncRoute = () => setIsAdminMode(checkIsAdminRoute());
+    window.addEventListener('popstate', syncRoute);
+    window.addEventListener('hashchange', syncRoute);
+    return () => {
+      window.removeEventListener('popstate', syncRoute);
+      window.removeEventListener('hashchange', syncRoute);
+    };
+  }, []);
+
+  const exitAdmin = () => {
+    refreshActiveSite();
+    if (window.location.pathname.replace(/\/+$/, '').toLowerCase().endsWith('/admin')) {
+      window.history.pushState({}, '', '/');
+    } else if (window.location.hash.toLowerCase().includes('admin')) {
+      window.location.hash = '';
+    }
+    if (window.location.search.includes('admin')) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('admin');
+      window.history.replaceState({}, '', url.toString());
+    }
+    setIsAdminMode(false);
+  };
   const [activeTab, setActiveTab] = useState('home');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -199,7 +258,7 @@ export default function App() {
     if (faviconLink && siteConfig.logo) {
       faviconLink.href = siteConfig.logo;
     }
-  }, []);
+  }, [siteConfig, isAdminMode]);
 
   // Sync cart to localStorage
   useEffect(() => {
@@ -342,6 +401,10 @@ export default function App() {
       }
     }, 60);
   };
+
+  if (isAdminMode) {
+    return <AdminPanel onExitAdmin={exitAdmin} />;
+  }
 
   return (
     <div className="min-h-screen eve-app-shell eve-motion-ready">
@@ -634,9 +697,11 @@ export default function App() {
               {/* Top Row: Bold 3-Line Display Headline (Left) + Editorial Note (Right) */}
               <div className="eve-hero-top-row">
                 <h1 className="eve-hero-display">
-                  CURATED FUTURE<br />
-                  OF GLOBAL<br />
-                  ESSENTIALS
+                  {siteConfig.heroTitle && siteConfig.heroTitle !== 'Nature-Driven Skincare & Botanical Formulations' ? (
+                    siteConfig.heroTitle
+                  ) : (
+                    <>CURATED FUTURE<br />OF GLOBAL<br />ESSENTIALS</>
+                  )}
                 </h1>
                 <p className="eve-hero-side-copy">
                   Direct Origin Sourcing, Verified Wholesale Supply, And Elevated Everyday Essentials Curated Worldwide.
@@ -667,7 +732,7 @@ export default function App() {
                   }}
                 >
                   <div className="eve-white-card-copy">
-                    <h3>EVE EARTH ESSENTIALS</h3>
+                    <h3>{(siteConfig.shortName || siteConfig.companyName || 'EVE EARTH').toUpperCase()} ESSENTIALS</h3>
                     <p>
                       Discover Direct-From-Origin Smart Tech, Botanical Care, Home &amp; Gourmet Reserves.
                     </p>
@@ -1101,15 +1166,34 @@ export default function App() {
                   )}
 
                   <div className="eve-contact-direct-meta">
-                    <a href={`mailto:${siteConfig.email}`}>
-                      <Mail size={14} />
-                      <span>{siteConfig.email}</span>
-                    </a>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      <Building2 size={14} />
+                      <span>{siteConfig.companyName}</span>
+                    </span>
                     <span>•</span>
                     <a href={`tel:${siteConfig.phoneDirectTel}`}>
                       <Phone size={14} />
                       <span>{siteConfig.phoneDirect}</span>
                     </a>
+                    <span>•</span>
+                    <a
+                      href={`https://wa.me/${siteConfig.whatsappNumber}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <MessageSquare size={14} />
+                      <span>WhatsApp: {siteConfig.whatsappDisplay || siteConfig.phoneDirect}</span>
+                    </a>
+                    <span>•</span>
+                    <a href={`mailto:${siteConfig.email}`}>
+                      <Mail size={14} />
+                      <span>{siteConfig.email}</span>
+                    </a>
+                    <span>•</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      <MapPin size={14} />
+                      <span>{siteConfig.address.full}</span>
+                    </span>
                     <span>•</span>
                     <a
                       href={`https://${siteConfig.website.replace(/^https?:\/\//, '')}`}
@@ -2033,12 +2117,52 @@ export default function App() {
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontSize: '0.95rem' }}>
                   <div style={{ display: 'flex', gap: '12px' }}>
+                    <Building2 size={20} color="var(--accent-teal)" />
+                    <div>
+                      <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>Company Name</div>
+                      <div style={{ color: '#fff', fontWeight: '600' }}>{siteConfig.companyName}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <Phone size={20} color="var(--accent-teal)" />
+                    <div>
+                      <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>Phone Number</div>
+                      <div><a href={`tel:${siteConfig.phoneDirectTel}`} style={{ color: '#fff', fontWeight: '600' }}>{siteConfig.phoneDirect}</a></div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <MessageSquare size={20} color="#25d366" />
+                    <div>
+                      <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>WhatsApp Number</div>
+                      <a 
+                        href={`https://wa.me/${siteConfig.whatsappNumber}`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        style={{ color: '#25d366', fontWeight: '600', textDecoration: 'none' }}
+                      >
+                        {siteConfig.whatsappDisplay || siteConfig.phoneDirect} (Instant)
+                      </a>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px' }}>
                     <Mail size={20} color="var(--accent-teal)" />
                     <div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>Email</div>
+                      <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>Email Address</div>
                       <a href={`mailto:${siteConfig.email}`} style={{ color: '#fff', textDecoration: 'none', fontWeight: '600' }}>
                         {siteConfig.email}
                       </a>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <MapPin size={20} color="var(--accent-teal)" />
+                    <div>
+                      <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>Registered Address</div>
+                      <div style={{ color: '#fff', fontWeight: '600' }}>{siteConfig.address.line1}</div>
+                      <div style={{ color: '#cbd5e1' }}>{siteConfig.address.line2}</div>
                     </div>
                   </div>
 
@@ -2049,47 +2173,6 @@ export default function App() {
                       <a href={`https://${(siteConfig.website || 'www.evearthllc.com').replace(/^https?:\/\//, '')}`} target="_blank" rel="noreferrer" style={{ color: '#fff', textDecoration: 'none', fontWeight: '600' }}>
                         {siteConfig.website || 'www.evearthllc.com'}
                       </a>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <Phone size={20} color="var(--accent-teal)" />
-                    <div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>Phone Number</div>
-                      <div>Direct: <a href={`tel:${siteConfig.phoneDirectTel}`} style={{ color: '#fff' }}>{siteConfig.phoneDirect}</a></div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <MapPin size={20} color="var(--accent-teal)" />
-                    <div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>Operating Trade Hub</div>
-                      <div style={{ color: '#fff', fontWeight: '600' }}>Global Distribution Trade Desk</div>
-                      <div style={{ color: '#cbd5e1' }}>Middle East & North America Logistics</div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <MessageSquare size={20} color="#25d366" />
-                    <div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>WhatsApp Chat</div>
-                      <a 
-                        href={`https://wa.me/${siteConfig.whatsappNumber}`} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        style={{ color: '#25d366', fontWeight: '600', textDecoration: 'none' }}
-                      >
-                        {siteConfig.phoneDirect} (Instant)
-                      </a>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <Building2 size={20} color="var(--accent-teal)" />
-                    <div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.8rem', textTransform: 'uppercase' }}>Management</div>
-                      <div style={{ color: '#fff' }}>{siteConfig.companyName}</div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Management & Operations</div>
                     </div>
                   </div>
                 </div>
@@ -2159,16 +2242,25 @@ export default function App() {
           <div className="footer-col">
             <h4>Contacts</h4>
             <ul style={{ marginBottom: '20px' }}>
-              <li>
-                <a href={`mailto:${siteConfig.email}`}>
-                  {siteConfig.email}
-                </a>
+              <li style={{ color: '#ffffff', fontWeight: '600' }}>
+                {siteConfig.companyName}
               </li>
               <li>
                 <a href={`tel:${siteConfig.phoneDirectTel}`}>
                   {siteConfig.phoneDirect}
                 </a>
               </li>
+              <li>
+                <a href={`https://wa.me/${siteConfig.whatsappNumber}`} target="_blank" rel="noreferrer" style={{ color: '#4ade80' }}>
+                  WhatsApp: {siteConfig.whatsappDisplay || siteConfig.phoneDirect}
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${siteConfig.email}`}>
+                  {siteConfig.email}
+                </a>
+              </li>
+              <li>{siteConfig.address.full}</li>
               {siteConfig.website && (
                 <li>
                   <a href={`https://${siteConfig.website.replace(/^https?:\/\//, '')}`} target="_blank" rel="noreferrer">
@@ -2183,6 +2275,13 @@ export default function App() {
               {siteConfig.footer.socials.map((soc) => (
                 <li key={soc.label}><a href={soc.url} target="_blank" rel="noreferrer">{soc.label}</a></li>
               ))}
+              {!(siteConfig.footer.socials || []).some((s) => /whatsapp/i.test(s.label)) && (
+                <li>
+                  <a href={`https://wa.me/${siteConfig.whatsappNumber}`} target="_blank" rel="noreferrer">
+                    WhatsApp
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
 
